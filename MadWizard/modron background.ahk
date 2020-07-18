@@ -6,18 +6,18 @@ CoordMode, ToolTip, Screen
 ;VARIABLES BASED NEEDED TO BE CHANGED
 
 ;if using speed Pots, manually specify your Briv farming time in minutes
-Global overrideBrivTime := 1.5
+Global overrideBrivTime := 2
 Global speedBrivTime := 0.5
 Global ScriptSpeed := 1, DefaultSleep := 50
 
-
+Global resetArea := 335 ;what you set Modron to reset at
 Global AreaLow := 326 ;z26 to z29 has portals, z41 & z16 has a portal also
 
 
 ;VARIABLES NOT NEEDED TO BE CHANGED
 ;   If you make no major changes to the script
 Global RunCount := 0, FailedCount := 0
-Global dtStartTime := "00:00:00", dtLastRunTime := "00:00:00"
+Global dtStartTime := "00:00:00", dtLastRunTime := "00:00:00", dtFirstResetTime := "00:00:00"
 Global crashes := 0
 
 LoadTooltip()
@@ -124,6 +124,9 @@ WaitForResults() {
         ;MouseClick, L, 650, 450, 2
         
         if FindInterfaceCue("areas\1.png", i, j) {
+            if (RunCount = 0) {
+                dtFirstResetTime := A_Now
+            }
             RunCount += 1
             dtLastRunTime := A_Now
             Sleep 5000
@@ -232,7 +235,12 @@ DataOut() {
     }
     LoopedTooltip(currentRunTime) {
         WinGetPos, x, y, width, height, ahk_exe IdleDragons.exe
-        ToolTip, % "Resets: " runCount "`nCrashes: " crashes "`nMins since start: " currentRunTime, % x + 50, % y + 200, 2
+        bosses := (runCount - 1) * (resetArea / 5)
+        if (bosses < 0) {
+            bosses := 0
+        }
+        bossesPerHour := round(bosses / (MinuteTimeDiff(dtFirstResetTime, A_Now) / 60), 0)
+        ToolTip, % "Resets: " runCount "`nCrashes: " crashes "`nMins since start: " currentRunTime "`nBosses: " bosses "`nBosses per hour: " bossesPerHour, % x + 50, % y + 200, 2
         SetTimer, RemoveToolTip, -1000
         return
     }
