@@ -71,7 +71,7 @@ SafetyCheck(Skip := False) {
     While(Not WinExist("ahk_exe IdleDragons.exe")) {
         Run, "C:\Program Files (x86)\Steam\steamapps\common\IdleChampions\IdleDragons.exe"
         Sleep 30000
-        DirectedInput("12345678")
+        DirectedInput("2345678")
         crashes++
     }
     if Not Skip {
@@ -134,7 +134,7 @@ WaitForResults() {
             RunCount += 1
             dtLastRunTime := A_Now
             Sleep 5000
-            DirectedInput("12345678")
+            DirectedInput("2345678")
             brivStacked := false
             Sleep 15000
         }
