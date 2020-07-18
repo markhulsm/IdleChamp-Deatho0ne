@@ -235,7 +235,7 @@ DataOut() {
     }
     LoopedTooltip(currentRunTime) {
         WinGetPos, x, y, width, height, ahk_exe IdleDragons.exe
-        bosses := (runCount - 1) * (resetArea / 5)
+        bosses := round((runCount - 1) * (resetArea / 5), 0)
         if (bosses < 0) {
             bosses := 0
         }
