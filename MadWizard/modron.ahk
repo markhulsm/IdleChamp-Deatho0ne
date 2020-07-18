@@ -18,6 +18,7 @@ Global Specialized := 1, LevelKey := 2, SliceName := 3
 Global ZoomedOut = False, ResetTest := False
 Global RunCount := 0, FailedCount := 0
 Global dtStartTime := "00:00:00", dtLastRunTime := "00:00:00"
+Global crashes := 0
 
 LoadTooltip()
 
@@ -70,17 +71,12 @@ SafetyCheck(Skip := False) {
     While(Not WinExist("ahk_exe IdleDragons.exe")) {
         Run, "C:\Program Files (x86)\Steam\steamapps\common\IdleChampions\IdleDragons.exe"
         Sleep 30000
-        ZoomedOut := False
-        ;ResetStep("runAdventure\offlineOkay.png", 5, 5, 1, 1, True)
         DirectedInput("12345678")
+        crashes++
     }
     if Not Skip {
         WinActivate, ahk_exe IdleDragons.exe
     }
-    ;Click any connection problem popups
-    ;ResetStep("runAdventure\retry.png", 5, 5, 1, 1, True)
-    ;ResetStep("runAdventure\ok.png", 5, 5, 1, 1, True)
-    ;ResetStep("runAdventure\ok2.png", 5, 5, 1, 1, True)
 }
 
 DirectedInput(s) {
@@ -135,9 +131,12 @@ WaitForResults() {
         MouseClick, L, 650, 450, 2
         
         if FindInterfaceCue("areas\1.png", i, j) {
+            RunCount += 1
+            dtLastRunTime := A_Now
             Sleep 5000
             DirectedInput("12345678")
             brivStacked := false
+            Sleep 15000
         }
 
         if (Not brivStacked And (FindInterfaceCue(workingArea, i, j) Or FindInterfaceCue(completeArea, i, j))) {
@@ -157,11 +156,12 @@ WaitForResults() {
 
         SendRight()
 
+        currentRunTime := round(MinuteTimeDiff(dtLastRunTime, A_Now), 2)
+        LoopedTooltip(currentRunTime)
     }
 }
 
 BuildBrivStacks() {
-    ;no reason to wait if no Briv
     DirectedInput("w")
     DirectedInput("g")
     Sleep 5
@@ -176,7 +176,6 @@ BuildBrivStacks() {
     DirectedInput("g")
     Sleep 5000
     DirectedInput("q")
-    RunCount += 1
 }
 
 DataOut() {
@@ -240,8 +239,8 @@ DataOut() {
         SetTimer, RemoveToolTip, -5000
         return
     }
-    LoopedTooltip(variants, currentRunTime) {
-        ToolTip, % "NpMiVaSt: " variants "`nMins since start: " currentRunTime, 50, 200, 2
+    LoopedTooltip(currentRunTime) {
+        ToolTip, % "Resets: " runCount "`nCrashes: " crashes "`nMins since start: " currentRunTime, 50, 200, 2
         SetTimer, RemoveToolTip, -1000
         return
     }
