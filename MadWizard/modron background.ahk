@@ -1,5 +1,7 @@
 SetWorkingDir, %A_ScriptDir%
 SetMouseDelay, 30
+CoordMode, Pixel, Screen
+CoordMode, ToolTip, Screen
 
 ;VARIABLES BASED NEEDED TO BE CHANGED
 
@@ -14,8 +16,6 @@ Global AreaLow := 326 ;z26 to z29 has portals, z41 & z16 has a portal also
 
 ;VARIABLES NOT NEEDED TO BE CHANGED
 ;   If you make no major changes to the script
-Global Specialized := 1, LevelKey := 2, SliceName := 3
-Global ZoomedOut = False, ResetTest := False
 Global RunCount := 0, FailedCount := 0
 Global dtStartTime := "00:00:00", dtLastRunTime := "00:00:00"
 Global crashes := 0
@@ -75,25 +75,25 @@ SafetyCheck(Skip := False) {
         crashes++
     }
     if Not Skip {
-        WinActivate, ahk_exe IdleDragons.exe
+        ;WinActivate, ahk_exe IdleDragons.exe
     }
 }
 
 DirectedInput(s) {
 	SafetyCheck(True)
 	ControlFocus,, ahk_exe IdleDragons.exe
-	ControlSend,, {Blind}%s%, ahk_exe IdleDragons.exe
+	ControlSend, ahk_parent, {Blind}%s%, ahk_exe IdleDragons.exe
 	Sleep, %ScriptSpeed%
 }
 
 FindInterfaceCue(filename, ByRef i, ByRef j, time = 0) {
 	SafetyCheck()
-	WinGetPos,,, width, height, A
+	WinGetPos, x, y, width, height, ahk_exe IdleDragons.exe
 	start := A_TickCount
 	Loop {
-		ImageSearch, x, y, 0, 0, %width%, %height%, *15 *Trans0x00FF00 %filename%
+		ImageSearch, outx, outy, x, y, % x + width, % y + height, *15 *Trans0x00FF00 %filename%
 		If (ErrorLevel = 0) {
-			i := x, j := y
+			i := outx - x, j := outy - y
 			Return True
 		}
 		If ((A_TickCount - start)/1000 >= time) {
@@ -106,18 +106,11 @@ FindInterfaceCue(filename, ByRef i, ByRef j, time = 0) {
 ResetStep(filename, k, l, timeToRun := 0, bool := True) {
     If FindInterfaceCue(filename, i, j, timeToRun) {
 		SafetyCheck()
-		MouseClick, L, i+k, j+l, 2
+		ControlClick, % "x" i + k " y" j + l, ahk_exe IdleDragons.exe
 	}
 	Else If (bool) {
 		Reload
 	}
-}
-
-SendRight() {
-    Sleep 10
-    DirectedInput("{Right}")
-    Sleep 10
-    Send {Right}
 }
 
 WaitForResults() {  
@@ -128,7 +121,7 @@ WaitForResults() {
     loop {
         ;simple click incase of fire
         SafetyCheck()
-        MouseClick, L, 650, 450, 2
+        ;MouseClick, L, 650, 450, 2
         
         if FindInterfaceCue("areas\1.png", i, j) {
             RunCount += 1
@@ -146,15 +139,13 @@ WaitForResults() {
 
         if FindInterfaceCue("runAdventure\offlineOkay.png", i, j) {
             SafetyCheck()
-            MouseClick, L, i+5, j+5, 2
+            ControlClick, % "x" i + 5 " y" j + 5, ahk_exe IdleDragons.exe
             Sleep 50
         }
             
         if FindInterfaceCue("runAdventure\progress.png", i, j) {
             DirectedInput("g")
         }
-
-        SendRight()
 
         currentRunTime := round(MinuteTimeDiff(dtLastRunTime, A_Now), 2)
         LoopedTooltip(currentRunTime)
@@ -240,7 +231,8 @@ DataOut() {
         return
     }
     LoopedTooltip(currentRunTime) {
-        ToolTip, % "Resets: " runCount "`nCrashes: " crashes "`nMins since start: " currentRunTime, 50, 200, 2
+        WinGetPos, x, y, width, height, ahk_exe IdleDragons.exe
+        ToolTip, % "Resets: " runCount "`nCrashes: " crashes "`nMins since start: " currentRunTime, % x + 50, % y + 200, 2
         SetTimer, RemoveToolTip, -1000
         return
     }
