@@ -16,7 +16,7 @@ Global AreaLow := 326 ;z26 to z29 has portals, z41 & z16 has a portal also
 ;   If you make no major changes to the script
 Global RunCount := 0, FailedCount := 0
 Global dtStartTime := "00:00:00", dtLastRunTime := "00:00:00", dtFirstResetTime := "00:00:00"
-Global crashes := 0
+Global crashes := 0, bosses := 0, bossesPerHour := 0
 
 LoadTooltip()
 
@@ -134,6 +134,8 @@ WaitForResults() {
             }
             RunCount += 1
             dtLastRunTime := A_Now
+            bosses := round((runCount - 1) * (resetArea / 5), 0)
+            bossesPerHour := round(bosses / (MinuteTimeDiff(dtFirstResetTime, A_Now) / 60), 0)
             Sleep 5000
             DirectedInput("12345678")
             brivStacked := false
@@ -184,9 +186,9 @@ DataOut() {
     dtNow := A_Now
     toWallRunTime := DateTimeDiff(dtStartTime, dtLastRunTime)
     lastRunTime := DateTimeDiff(dtLastRunTime, dtNow)
-    totBosses := Floor(AreaLow / 5) * RunCount
-    currentPatron := NpVariant ? "NP" : MirtVariant ? "Mirt" : VajraVariant ? "Vajra" : StrahdVariant ? "Strahd" : "How?"
-    areaStopped = 0 ;InputBox, areaStopped, Area Stopped, Generaly stop on areas ending in`nz1 thru z4`nz6 thru z9
+    totBosses := Floor(resetArea / 5) * RunCount
+    currentPatron := "?"
+    areaStopped = InputBox, areaStopped, Area Stopped, Generaly stop on areas ending in`nz1 thru z4`nz6 thru z9
     ;meant for Google Sheets/Excel/Open Office
     FileAppend,%currentDateTime%`t%AreaLow%`t%toWallRunTime%`t%lastRunTime%`t%RunCount%`t%totBosses%`t%currentPatron%`t%FailedCount%`t%areaStopped%`n, MadWizard-Bosses.txt
 }
@@ -241,11 +243,6 @@ DataOut() {
         return
     }
     LoopedTooltip(currentRunTime) {
-        bosses := round((runCount - 1) * (resetArea / 5), 0)
-        if (bosses < 0) {
-            bosses := 0
-        }
-        bossesPerHour := round(bosses / (MinuteTimeDiff(dtFirstResetTime, A_Now) / 60), 0)
         ToolTip, % "Resets: " runCount "`nCrashes: " crashes "`nMins since start: " currentRunTime "`nBosses: " bosses "`nBosses per hour: " bossesPerHour, 50, 200, 2
         SetTimer, RemoveToolTip, -1000
         return
